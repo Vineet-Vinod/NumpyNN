@@ -13,12 +13,16 @@ class ActivationFunction:
         pass
 
 
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output):
         try:
             assert(output.shape[1] == 1)
         except AssertionError:
             print(f"AssertionError assert(output.shape[1] == 1): Layer output must be an (nx1) matrix")
             sys.exit(1)
+
+    
+    def __getitem__(self, output):
+        pass
 
 
 class ReLU(ActivationFunction):
@@ -26,33 +30,27 @@ class ReLU(ActivationFunction):
         super().__init__()
 
     
-    @staticmethod
-    def relu(num: np.array, *args, **kwargs) -> np.array:
-        num = num[0]
-        if num < 0: return np.array([0])
-        return np.array([num])
+    def __call__(self, output):
+        super().__call__(output)
+        return np.maximum(output, 0)
     
 
-    def __call__(self, output: np.array) -> np.array:
-        super().__call__(output)
-        return np.apply_along_axis(self.relu, 1, output)
+    def __getitem__(self, output):
+        return np.where(output < 0, 0, 1)
     
 
 class BinaryStep(ActivationFunction):
     def __init__(self) -> None:
         super().__init__()
-
-    
-    @staticmethod
-    def b_step(num: np.array, *args, **kwargs) -> np.array:
-        num = num[0]
-        if num <= 0: return np.array([0])
-        return np.array([1])
     
 
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output) :
         super().__call__(output)
-        return np.apply_along_axis(self.b_step, 1, output)
+        return np.where(output <= 0, 0, 1)
+    
+
+    def __getitem__(self, output):
+        return np.zeros(output.shape)
 
 
 class Sigmoid(ActivationFunction):
@@ -60,9 +58,13 @@ class Sigmoid(ActivationFunction):
         super().__init__()
     
 
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output):
         super().__call__(output)
         return 1 / (1 + np.exp(-output))
+    
+
+    def __getitem__(self, output):
+        return (1 / (1 + np.exp(-output))) * (1 - (1 / (1 + np.exp(-output))))
     
 
 class Tanh(ActivationFunction):
@@ -70,9 +72,13 @@ class Tanh(ActivationFunction):
         super().__init__()
 
     
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output):
         super().__call__(output)
         return (np.exp(output) - np.exp(-output)) / (np.exp(output) + np.exp(-output))
+    
+
+    def __getitem__(self, output):
+        return 1 - ((np.exp(output) - np.exp(-output)) / (np.exp(output) + np.exp(-output)) ** 2)
 
 
 class Softplus(ActivationFunction):
@@ -80,57 +86,57 @@ class Softplus(ActivationFunction):
         super().__init__()
     
 
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output):
         super().__call__(output)
         return np.log(1 + np.exp(output))
     
 
+    def __getitem__(self, output):
+        return 1 / (1 + np.exp(-output))
+    
+
 class ELU(ActivationFunction):
-    def  __init__(self, alpha: float) -> None:
+    def  __init__(self, alpha) -> None:
         super().__init__()
         self.alpha = alpha
-
-    
-    @staticmethod
-    def elu(num: np.array, *args) -> np.array:
-        alpha = args[0]
-        num = num[0]
-        if num < 0: return np.array([alpha * (exp(num) - 1)])
-        return np.array([num])
     
 
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output):
         super().__call__(output)
-        return np.apply_along_axis(self.elu, 1, output, self.alpha)
+        return np.where(output < 0, self.alpha * (exp(output) - 1), output)
+    
+
+    def __getitem__(self, output):
+        return np.where(output < 0, self.alpha * exp(output), 1)
     
 
 class SELU(ELU):
-    def  __init__(self, alpha: float, lamda: float) -> None:
+    def  __init__(self, alpha, lamda) -> None:
         super().__init__(alpha)
         self.lamda = lamda
     
 
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output):
         return self.lamda * super().__call__(output)
+    
+
+    def __getitem__(self, output):
+        return self.lamda * super().__getitem__(output)
 
 
 class PReLU(ActivationFunction):
-    def __init__(self, alpha: float) -> None:
+    def __init__(self, alpha) -> None:
         super().__init__()
         self.alpha = alpha
-
-    
-    @staticmethod
-    def prelu(num: np.array, *args, **kwargs) -> np.array:
-        alpha = args[0]
-        num = num[0]
-        if num < 0: return np.array([alpha * num])
-        return np.array([num])
     
 
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output) :
         super().__call__(output)
-        return np.apply_along_axis(self.prelu, 1, output, self.alpha)
+        return np.where(output < 0, self.alpha * output, output)
+    
+
+    def __getitem__(self, output) :
+        return np.where(output < 0, self.alpha, 1)
 
 
 class LReLU(PReLU):
@@ -138,17 +144,12 @@ class LReLU(PReLU):
         super().__init__(0.01)
 
     
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output):
         return super().__call__(output)
-
-
-class SiLU(Sigmoid):
-    def __init__(self) -> None:
-        super().__init__()
-
     
-    def __call__(self, output: np.array) -> np.array:
-        return super().__call__(output) * output
+
+    def __getitem__(self, output):
+        return super().__getitem__(output)
 
 
 class Softmax(ActivationFunction):
@@ -156,10 +157,14 @@ class Softmax(ActivationFunction):
         super().__init__()
 
     
-    def __call__(self, output: np.array) -> np.array:
+    def __call__(self, output):
         super().__call__(output)
         denominator = np.sum(np.exp(output))
         return np.exp(output) / denominator
+    
+
+    def __getitem__(self, output):
+        return output * (1 - output)
     
 
 if __name__ == "__main__":
