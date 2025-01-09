@@ -56,7 +56,7 @@ def convert(classifier_predictions):
     return predictions
 
 if __name__ == "__main__":
-    # 2. MNIST digits classifier
+    # MNIST digits classifier
     X_train_reshaped /= 16
     X_test_reshaped /= 16
     
@@ -67,30 +67,3 @@ if __name__ == "__main__":
 
     classifier.fit(X_train_reshaped, y_train_reshaped, 1000, alpha, categorical_cross_entropy_loss)
     display_images(X_test, y_test, title="NumpyNN Predictions", predictions=convert(classifier.predict(X_test_reshaped)))
-
-    # 1. Try to fit x^3 + y^3 + z^3
-    """
-    neural_net = LayerList(Layer(3, 5),
-                           Layer(5, 3, bias=True, activation=ReLU()),
-                           Layer(3, 1, bias=True))
-    X = [[[22], [25], [24]], [[23], [19], [6]], [[13], [18], [8]], [[6], [12], [19]], [[22], [1], [7]], [[22], [7], [7]], [[19], [1], [18]], [[5], [14], [8]], [[20], [14], [13]], [[19], [10], [11]], [[17], [15], [11]], [[18], [5], [19]], [[23], [4], [6]], [[7], [15], [6]], [[23], [17], [18]], [[13], [14], [6]], [[6], [14], [22]], [[16], [18], [15]], [[22], [22], [3]], [[23], [12], [2]], [[14], [4], [10]], [[4], [3], [5]], [[7], [16], [25]], [[8], [21], [17]], [[20], [22], [20]], [[5], [9], [8]], [[21], [7], [10]], [[19], [3], [8]], [[1], [3], [13]], [[22], [24], [24]], [[17], [13], [13]], [[17], [19], [18]]]
-    y = [40097, 19242, 8541, 8803, 10992, 11334, 12692, 3381, 12941, 9190, 9619, 12816, 12447, 3934, 22912, 5157, 13608, 13303, 21323, 13903, 3808, 216, 20064, 14686, 26648, 1366, 10604, 7398, 2225, 38296, 9307, 17604]
-    for i in range(len(X)):
-        mx = max(X[i][0][0], X[i][1][0], X[i][2][0])
-        for j in range(3): X[i][j][0] /= mx
-        y[i] /= mx ** 3
-    
-    # my = max(y)
-    # y = [val / my for val in y]
-    # X = [[[1],[1]],[[2],[2]],[[3],[3]],[[4],[4]],[[5],[5]],[[6],[6]]]
-    # y = [2,4,6,8,10,12]
-    
-    training_data = np.array(X[:28])
-    training_vals = np.array(y[:28])
-    testing_data = np.array(X[28:])
-    testing_vals = np.array(y[28:])
-    
-    print(MSE(neural_net.predict(testing_data), testing_vals))
-    neural_net.fit(training_data, training_vals, 0.01, 50)
-    print(MSE(neural_net.predict(testing_data), testing_vals))
-    """
