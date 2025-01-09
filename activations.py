@@ -27,28 +27,34 @@ class BinaryStep():
 
 class Sigmoid():
     def __call__(self, output):
+        output = np.clip(output, 1000, -1000) # Prevent exp(output) from overflowing
         return 1 / (1 + np.exp(-output))
     
 
     def derivative(self, output, grad_so_far):
+        output = np.clip(output, 1000, -1000) # Prevent exp(output) from overflowing
         return (1 / (1 + np.exp(-output))) * (1 - (1 / (1 + np.exp(-output)))) * grad_so_far
     
 
 class Tanh():
     def __call__(self, output):
+        output = np.clip(output, 1000, -1000) # Prevent exp(output) from overflowing
         return (np.exp(output) - np.exp(-output)) / (np.exp(output) + np.exp(-output))
     
 
     def derivative(self, output, grad_so_far):
+        output = np.clip(output, 1000, -1000) # Prevent exp(output) from overflowing
         return (1 - ((np.exp(output) - np.exp(-output)) / (np.exp(output) + np.exp(-output)) ** 2)) * grad_so_far
 
 
 class Softplus():
     def __call__(self, output):
+        output = np.clip(output, 1000, -1000) # Prevent exp(output) from overflowing
         return np.log(1 + np.exp(output))
     
 
     def derivative(self, output, grad_so_far):
+        output = np.clip(output, 1000, -1000) # Prevent exp(output) from overflowing
         return (1 / (1 + np.exp(-output))) * grad_so_far
     
 
@@ -58,10 +64,12 @@ class ELU():
     
 
     def __call__(self, output):
+        output = np.clip(output, 1000, -1000) # Prevent exp(output) from overflowing
         return np.where(output < 0, self.alpha * (exp(output) - 1), output)
     
 
     def derivative(self, output, grad_so_far):
+        output = np.clip(output, 1000, -1000) # Prevent exp(output) from overflowing
         return np.where(output < 0, self.alpha * exp(output), 1) * grad_so_far
     
 
@@ -101,8 +109,7 @@ class LReLU(PReLU):
         return super().__getitem__(output) * grad_so_far
 
 
-class Softmax(): 
-    """Use as the activation function only in the last layer"""
+class Softmax():
     def __call__(self, output):
         exp_shifted = np.exp(output - np.max(output, axis=1, keepdims=True))
         denominator = np.sum(exp_shifted, axis=1, keepdims=True)
@@ -110,12 +117,14 @@ class Softmax():
     
 
     def derivative(self, output, grad_so_far):
-        return grad_so_far
-    
+        output = self(output) # Get activated outputs for formulae
+        batch_size, n_classes = output.shape
 
-if __name__ == "__main__":
-    relu = Softmax()
-    output = np.random.rand(3,1)
-    output[0] *= -1
-    print(output)
-    print(relu(output))
+        # For 1 example, the jacobian is of size NxN, so for B batches, it is BxNxN
+        jacobian = np.zeros((batch_size, n_classes, n_classes))
+
+        for b in range(batch_size):
+            out = output[b].reshape(-1, 1) # Flatten output to be an Nx1 matrix
+            jacobian[b] = np.diagflat(out) - np.dot(out, out.T) # Create Jacobian for particular example
+
+        return np.einsum('bij,bj->bi', jacobian, grad_so_far)  # Efficient batch-wise dot product using Einstein summation notation
