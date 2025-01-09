@@ -135,7 +135,7 @@ class LayerList:
             layer.update_alpha(new_alpha)
 
 
-    def fit(self, input_data, expected, epochs, alpha):
+    def fit(self, input_data, expected, epochs, alpha, loss_deriv_func):
         if len(self.layer_list) == 0:
             return
         
@@ -149,7 +149,7 @@ class LayerList:
             
             for idx, data_batch in enumerate(batched_data):
                 output = self(data_batch, batch_size)
-                self.back(output - batched_expected[idx])
+                self.back(loss_deriv_func(output, batched_expected[idx]))
                 self.step()
             
             if epochs == total_iter // 10:
