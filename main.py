@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from activations import *
 from layer import *
+from loss import *
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
@@ -62,10 +63,9 @@ if __name__ == "__main__":
     alpha = 1e-2
     batch_size = 32
     classifier = LayerList(Layer(64, 28, alpha, batch_size),
-                           Layer(28, 28, alpha, batch_size, activation=ReLU()),
                            Layer(28, 10, alpha, batch_size,activation=Softmax()))
 
-    classifier.fit(X_train_reshaped, y_train_reshaped, 1000, alpha)
+    classifier.fit(X_train_reshaped, y_train_reshaped, 1000, alpha, categorical_cross_entropy_loss)
     display_images(X_test, y_test, title="NumpyNN Predictions", predictions=convert(classifier.predict(X_test_reshaped)))
 
     # 1. Try to fit x^3 + y^3 + z^3
