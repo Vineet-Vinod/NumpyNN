@@ -13,20 +13,20 @@ images = digits.images
 labels = digits.target
 
 
-# Convert the labels into arrays of probabilities
-new_labels = []
-for label in labels:
-    probs = [0] * 10
-    probs[label] = 1
-    new_labels.append(probs)
-
-labels = np.array(new_labels)
-
-
 # Split data into training and testing datasets
 X_train, X_test, y_train, y_test = train_test_split(images, labels, test_size=0.2, shuffle=False)
 X_train_reshaped = X_train.reshape(X_train.shape[0], -1)
 X_test_reshaped = X_test.reshape(X_test.shape[0], -1)
+
+
+# Convert the test labels into arrays of probabilities
+new_labels = []
+for label in y_train:
+    probs = [0] * 10
+    probs[label] = 1
+    new_labels.append(probs)
+
+y_train = np.array(new_labels)
 y_train_reshaped = y_train.reshape(y_train.shape[0], -1)
 
 
