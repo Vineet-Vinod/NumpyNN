@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from activations import *
-from layer import *
-from loss import *
+from src.activations import *
+from src.layer import *
+from src.loss import *
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
