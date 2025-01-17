@@ -20,8 +20,17 @@ class Layer:
         self.__update = None
 
 
-    # Forward pass through layer
+    # 
     def __call__(self, input, batch_size):
+        """Forward pass through layer
+
+        Args:
+            input (np.array): layer inputs
+            batch_size (int): expected batch size of current layer
+
+        Returns:
+            np.array: layer outputs
+        """
         try:
             assert(input.shape == (batch_size, self.__input_size))
         except AssertionError:
@@ -43,8 +52,15 @@ class Layer:
         return weight_prod
 
 
-    # Backward pass through layer
     def back(self, ret):
+        """Backward pass through layer
+
+        Args:
+            ret (np.array): gradients calculated till next layer
+
+        Returns:
+            np.array: gradients calculated till current layer
+        """
         if self.__activation_layer: # Optional activation layer
             ret = self.__activation_layer.derivative(self.__pre_activated_output, ret)
 
@@ -57,18 +73,30 @@ class Layer:
             return new_ret
     
 
-    def update(self): # Update layer weights
+    def update(self):
+        """Update layer weights
+        """
         self.__weights -= self.__alpha * self.__update
         self.__pre_activated_output = None
         self.__curr_inputs = None
         self.__update = None
 
 
-    def get_batch_size(self): # Batch size getter method
+    def get_batch_size(self):
+        """Batch size getter method
+
+        Returns:
+            int: batch size of current layer
+        """
         return self.__batch_size
     
 
-    def update_alpha(self, new_alpha): # Learning rate setter method
+    def update_alpha(self, new_alpha):
+        """Learning rate setter method
+
+        Args:
+            new_alpha (float): new alpha value
+        """
         self.__alpha = new_alpha
 
 
@@ -80,33 +108,54 @@ class LayerList:
             self.layer_list = list(layers)
 
 
-    # Add layers to the model outside the initialization
     def append(self, *layers):
+        """Add layers to the model outside the initialization
+        """
         for layer in layers:
             self.layer_list.append(layer)
 
 
-    # Forward pass through model
     def __call__(self, input, batch_size):
+        """Forward pass through model
+
+        Args:
+            input (np.array): input data
+            batch_size (int): batch size of input data
+
+        Returns:
+            np.array: model predictions
+        """
         for layer in self.layer_list:
             input = layer(input, batch_size)
         
         return input
     
 
-    # Backward pass through model
     def back(self, error):
+        """Backward pass through model
+
+        Args:
+            error (np.array): the gradients calculated by the loss function
+        """
         for layer in self.layer_list[::-1]:
             error = layer.back(error)
     
 
-    # Update all weights and biases in the model
     def step(self):
+        """Update all weights and biases in the model
+        """
         for layer in self.layer_list: layer.update()
 
     
-    # Model inference function
     def predict(self, inputs):
+        """Model inference function
+
+        Args:
+            inputs (np.array): inference inputs
+
+        Returns:
+            np.array: model predictions
+        """
         predictions = []
 
         for input in inputs:
@@ -115,9 +164,18 @@ class LayerList:
         return predictions
     
 
-    # Split the training dataset into batches
     @staticmethod
     def batch(input_data, expected, batch_size):
+        """Split the training dataset into batches
+
+        Args:
+            input_data (np.array): input dataset
+            expected (np.array): expected values for inputs
+            batch_size (int): desired batch size
+
+        Returns:
+            _type_: _description_
+        """
         data_pts = input_data.shape[0]
         indicies = [i for i in range(data_pts)]
         shuffle(indicies)
@@ -136,14 +194,26 @@ class LayerList:
         return np.array(batched_data), np.array(batched_results)
 
 
-    # Update the learning rate in all layers
     def update_alpha(self, new_alpha):
+        """Update the learning rate in all layers
+
+        Args:
+            new_alpha (float): updated alpha value
+        """
         for layer in self.layer_list:
             layer.update_alpha(new_alpha)
 
 
-    # Model training loop
     def fit(self, input_data, expected, epochs, alpha, loss_deriv_func):
+        """Model training loop
+
+        Args:
+            input_data (np.array): model training data
+            expected (np.array): expected values for training data
+            epochs (int): number of times the input_data is fed to the model
+            alpha (float): initial learning rate
+            loss_deriv_func (function): loss function (from loss.py)
+        """
         if len(self.layer_list) == 0:
             return
         

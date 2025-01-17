@@ -30,8 +30,16 @@ y_train = np.array(new_labels)
 y_train_reshaped = y_train.reshape(y_train.shape[0], -1)
 
 
-# Helper function to display images and model predictions
+# 
 def display_images(images, labels, title=None, predictions=None):
+    """Helper function to display images and model predictions
+
+    Args:
+        images (np.array): images to classify
+        labels (list): expected labels of images
+        title (str, optional): graph title. Defaults to None.
+        predictions (list, optional): model predicted labels of images. Defaults to None.
+    """
     fig, axs = plt.subplots(nrows=10, ncols=10, figsize=(8,8))
     fig.subplots_adjust(hspace=0.8)
     if title is not None: fig.suptitle(title, fontsize=20, fontweight="bold")
@@ -47,8 +55,16 @@ def display_images(images, labels, title=None, predictions=None):
     plt.show()
 
 
-# Helper function to convert numpy arrays of probabilities returned by the model into digit labels
 def convert(classifier_predictions):
+    """Helper function to convert numpy arrays of probabilities 
+       returned by the model into digit labels
+
+    Args:
+        classifier_predictions (np.array): model predictions
+
+    Returns:
+        list: dataset labels
+    """
     predictions = []
 
     for prediction in classifier_predictions:
@@ -74,11 +90,13 @@ if __name__ == "__main__":
     batch_size = 32
 
     # MNIST digits classifier
+    # Use LayerList to initialize neural network model
+    # Add Layer objects to model either in LayerList instantiation or using LayerList.append() method
     classifier = LayerList(Layer(64, 28, alpha, batch_size),
                            Layer(28, 10, alpha, batch_size,activation=Softmax()))
 
-    # Train
+    # Train using LayerList.fit() method
     classifier.fit(X_train_reshaped, y_train_reshaped, 1000, alpha, categorical_cross_entropy_loss)
 
-    # Evaluate
+    # Evaluate using LayerList.predict() method
     display_images(X_test, y_test, title="NumpyNN Predictions", predictions=convert(classifier.predict(X_test_reshaped)))
