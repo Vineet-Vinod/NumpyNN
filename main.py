@@ -30,7 +30,6 @@ y_train = np.array(new_labels)
 y_train_reshaped = y_train.reshape(y_train.shape[0], -1)
 
 
-# 
 def display_images(images, labels, title=None, predictions=None):
     """Helper function to display images and model predictions
 
@@ -92,11 +91,11 @@ if __name__ == "__main__":
     # MNIST digits classifier
     # Use LayerList to initialize neural network model
     # Add Layer objects to model either in LayerList instantiation or using LayerList.append() method
-    classifier = LayerList(Layer(64, 28, alpha, batch_size),
-                           Layer(28, 10, alpha, batch_size,activation=Softmax()))
+    classifier = LayerList(Layer(64, 28),
+                           Layer(28, 10, activation=Softmax()))
 
     # Train using LayerList.fit() method
-    classifier.fit(X_train_reshaped, y_train_reshaped, 1000, alpha, categorical_cross_entropy_loss)
+    classifier.fit(X_train_reshaped, y_train_reshaped, 1000, alpha, batch_size, categorical_cross_entropy_loss)
 
     # Evaluate using LayerList.predict() method
     display_images(X_test, y_test, title="NumpyNN Predictions", predictions=convert(classifier.predict(X_test_reshaped)))

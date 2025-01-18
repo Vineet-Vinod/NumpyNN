@@ -4,11 +4,9 @@ from random import shuffle
 
 
 class Layer:
-    def __init__(self, input, output, alpha, batch_size=1, bias=False, activation=None):
-        self.__input_size = input
+    def __init__(self, input, output, bias=False, activation=None):
         self.__weights = np.random.rand(input, output)
-        self.__batch_size = batch_size
-        self.__alpha = alpha
+        self.__alpha = 1e-3 # Default value
 
         self.__bias = bias
         if bias:
@@ -20,34 +18,26 @@ class Layer:
         self.__update = None
 
 
-    # 
-    def __call__(self, input, batch_size):
+    def __call__(self, input):
         """Forward pass through layer
 
         Args:
             input (np.array): layer inputs
-            batch_size (int): expected batch size of current layer
 
         Returns:
             np.array: layer outputs
-        """
-        try:
-            assert(input.shape == (batch_size, self.__input_size))
-        except AssertionError:
-            print(f"AssertionError (input.shape == (batch_size, self.__input_size)): {input.shape} != ({batch_size}, {self.__input_size})")
-            sys.exit(1)
-        
+        """       
         # Handle optional bias term
         if self.__bias:
             input = np.hstack((input, np.ones((input.shape[0], 1))))
 
         self.__curr_inputs = np.copy(input)
         weight_prod = input @ self.__weights
-        self.__pre_activated_output = np.copy(weight_prod)
 
         # Handle optional activation layer
         if self.__activation_layer:
-            return self.__activation_layer(weight_prod)
+            self.__pre_activated_output = np.copy(weight_prod)
+            weight_prod = self.__activation_layer(weight_prod)
         
         return weight_prod
 
@@ -80,15 +70,6 @@ class Layer:
         self.__pre_activated_output = None
         self.__curr_inputs = None
         self.__update = None
-
-
-    def get_batch_size(self):
-        """Batch size getter method
-
-        Returns:
-            int: batch size of current layer
-        """
-        return self.__batch_size
     
 
     def update_alpha(self, new_alpha):
@@ -115,18 +96,17 @@ class LayerList:
             self.layer_list.append(layer)
 
 
-    def __call__(self, input, batch_size):
+    def __call__(self, input):
         """Forward pass through model
 
         Args:
             input (np.array): input data
-            batch_size (int): batch size of input data
 
         Returns:
             np.array: model predictions
         """
         for layer in self.layer_list:
-            input = layer(input, batch_size)
+            input = layer(input)
         
         return input
     
@@ -144,7 +124,8 @@ class LayerList:
     def step(self):
         """Update all weights and biases in the model
         """
-        for layer in self.layer_list: layer.update()
+        for layer in self.layer_list:
+            layer.update()
 
     
     def predict(self, inputs):
@@ -159,7 +140,8 @@ class LayerList:
         predictions = []
 
         for input in inputs:
-            predictions.append(self(np.expand_dims(input, axis=0), 1))
+            # Expanding dims to ensure shape is (1, num_features)
+            predictions.append(self(np.expand_dims(input, axis=0)))
         
         return predictions
     
@@ -204,7 +186,7 @@ class LayerList:
             layer.update_alpha(new_alpha)
 
 
-    def fit(self, input_data, expected, epochs, alpha, loss_deriv_func):
+    def fit(self, input_data, expected, epochs, alpha, batch_size, loss_deriv_func):
         """Model training loop
 
         Args:
@@ -212,6 +194,7 @@ class LayerList:
             expected (np.array): expected values for training data
             epochs (int): number of times the input_data is fed to the model
             alpha (float): initial learning rate
+            batch_size (int): batch size for training
             loss_deriv_func (function): loss function (from loss.py)
         """
         if len(self.layer_list) == 0:
@@ -222,11 +205,10 @@ class LayerList:
 
         while epochs:
             epochs -= 1
-            batch_size = self.layer_list[0].get_batch_size()
             batched_data, batched_expected = LayerList.batch(input_data, expected, batch_size)
             
             for idx, data_batch in enumerate(batched_data):
-                output = self(data_batch, batch_size)
+                output = self(data_batch)
                 self.back(loss_deriv_func(output, batched_expected[idx]))
                 self.step()
             
