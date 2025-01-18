@@ -52,4 +52,4 @@ pip install numpy matplotlib scikit-learn
 
 ## Additional Resources
 
-For an in-depth walkthrough of the design and implementation, check out the [YouTube series](<insert_link_here>) detailing the concepts and build process.
+For an in-depth walkthrough of the design and implementation, check out the [YouTube series](https://youtube.com/playlist?list=PLzC38h82FLMtT3VyvL3lAxXqiT7ahqp_o&feature=shared) detailing the concepts and build process.

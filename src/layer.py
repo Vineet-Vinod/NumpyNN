@@ -1,5 +1,4 @@
 import numpy as np
-import sys
 from random import shuffle
 
 
@@ -58,9 +57,9 @@ class Layer:
         new_ret = ret @ (self.__weights.T)
 
         if self.__bias: # Remove bias column if needed
-            return new_ret[:, :-1]
-        else:
-            return new_ret
+            new_ret = new_ret[:, :-1]
+
+        return new_ret
     
 
     def update(self):
